@@ -62,16 +62,6 @@ Agent 的入口是 [SKILL.md](skills/tuoyuanai/SKILL.md)，命令帮助为
 `python3 skills/tuoyuanai/scripts/tuoyuanai.py --help`。
 [API 契约](skills/tuoyuanai/references/api.md) 说明流式返回、失败、并发保存、费用与下载边界。
 
-## 与 LibTV skill 的关系
-
-参考了 [libtv-labs/libtv-skills](https://github.com/libtv-labs/libtv-skills)
-的产品形态：skill 文档 + 轻量脚本 + 服务端创作 Agent。本仓库独立实现，不是把对方的接口
-域名替换后直接运行，也不包含其服务端或本平台私有代码。
-
-不同之处：使用拓元AI真实会话/画布契约；显式创建独立画布而非更换全局绑定；
-默认不生成媒体；状态来自持久化执行与节点，而非聊天文本中的 URL；
-下载不覆盖已有文件；不自动重发付费请求。
-
 ## 已知边界
 
 请先阅读 [v0.1 已知边界](KNOWN_LIMITATIONS.md)，尤其是登录令牌权限、已有画布的素材引用，以及音视频验收范围。
