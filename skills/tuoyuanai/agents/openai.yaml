@@ -1,4 +1,4 @@
 interface:
   display_name: "拓元AI"
-  short_description: "连接拓元AI创作画布，提交创作需求、上传素材、查询进度并下载结果"
-  default_prompt: "Use $tuoyuanai to carry out my creative request on TuoyuanAI and return the canvas link and actual results."
+  short_description: "通过独立 Access Key 使用拓元AI云端创作、查询与下载"
+  default_prompt: "Use $tuoyuanai to submit my creative request, check its server-side progress, and retrieve completed results."

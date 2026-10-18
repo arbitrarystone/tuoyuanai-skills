@@ -1,75 +1,72 @@
-# tuoyuanai-skills · 拓元AI
+# 拓元AI Skill
 
-让 AI Agent 连接拓元AI：提交创作需求、上传参考素材、查看画布进展，并把完成的作品带回本地。
+将拓元AI的创作能力接入你的 AI 助手。用自然语言发起文字、图文、分镜及经过授权的媒体创作，上传参考素材，随时查看进度和下载结果。
 
-**开源的是轻量 skill 客户端，不是拓元AI平台服务端。** 使用服务需要自己的客户账号，
-生成任务按平台当前规则计费。Python 3.10+，只使用标准库，无 Python 第三方依赖。
+> **OpenAPI 预览版本**：需要平台配套的 Access Key / `/openapi/` 版本。本仓库更新不等于生产平台已经上线。未部署新接口的环境请勿安装此预览版；既有 v0.1.1 版本保持不变。
+
+## 工作方式
+
+**独立 Access Key → 提交请求 → 返回会话与执行 ID → 服务端执行 → 增量查询和下载。**
+
+关闭终端不会停止后台创作。会话、消息和结果保存在平台，不依赖本地 session 文件。Skill 不保存账户密码，不持有网页登录令牌，不回写聊天记录。
 
 ## 安装
 
-```bash
-npx skills add arbitrarystone/tuoyuanai-skills --skill tuoyuanai
-```
-
-也可以将 `skills/tuoyuanai` 整个目录复制到支持 Agent Skills 的工具所使用的技能目录。
-安装器与兼容格式参考 [skills CLI](https://github.com/vercel-labs/skills) 和
-[Agent Skills specification](https://agentskills.io/specification)。
-
-## 首次连接
-
-在终端交互登录，密码不进入命令参数，令牌不打印：
+预览版本按发布标签安装：
 
 ```bash
-python3 skills/tuoyuanai/scripts/tuoyuanai.py login \
-  --phone YOUR_PHONE \
-  --token-file "$HOME/.config/tuoyuanai/session.json"
-export TUOYUANAI_TOKEN_FILE="$HOME/.config/tuoyuanai/session.json"
+npx skills add https://github.com/arbitrarystone/tuoyuanai-skills/tree/v0.2.0-rc.1 --skill tuoyuanai
 ```
 
-Windows 将 `python3` 换为 `python`，环境变量使用：
+也可以下载本预览版 ZIP，将 `skills/tuoyuanai` 放入你的助手支持的 Skill 目录。
 
-```powershell
-$env:TUOYUANAI_TOKEN_FILE = "$HOME/.config/tuoyuanai/session.json"
-```
+## 配置
 
-令牌文件请放在仓库外，且必须是新文件。默认连接 [拓元AI](https://tuoyuanai.com)。
-**v0.1 使用现有账号登录令牌，不提供独立 API Key、scope 或刷新令牌。**
-权限与该登录账号相同。完整安全说明见 [登录文档](skills/tuoyuanai/references/authentication.md)。
+- Python 3.10 或更新版本，无第三方 Python 依赖。
+- 在平台「个人中心 → Skill 接入」创建 Access Key。
+- 在运行环境安全设置 `TUOYUANAI_ACCESS_KEY`，不要将密钥贴进聊天或提交到代码仓库。
+- `TUOYUANAI_BASE_URL` 可设置配套平台地址，默认 `https://tuoyuanai.com`。非本机地址要求 HTTPS。
+- 密钥默认仅允许文字与规划。需要媒体生成时，创建密钥时启用相应权限，并对本次生成明确授权。
 
-## 可以做什么
+配置细节：[认证](skills/tuoyuanai/references/authentication.md)。
 
-- 新建独立创作画布，继续指定会话，返回网页端可打开的画布链接。
-- 发送自然语言写作、图像、分镜、视频创作需求，复用平台 Agent，不另写一套生成编排。
-- 上传并关联参考素材；获取账号实际可用的模型与能力。
-- 查看持久化回复、后台执行与节点状态；按需停止 Agent。
-- 导出完成的文字、图片、音频或视频节点，不把预览或参考素材冒充生成结果。
+## 示例
 
-默认只进行文本创作与画布规划，不提交媒体任务；文字调用也可能计费。
-**真正提交图片/音频/视频生成需要明确添加 `--generate-media`。**
-该开关是统一媒体授权，不是按媒体类型划分的权限；不要因请求图片而额外生成视频。
+在 `skills/tuoyuanai` 目录：
 
 ```bash
-python3 skills/tuoyuanai/scripts/tuoyuanai.py capabilities
-python3 skills/tuoyuanai/scripts/tuoyuanai.py create
-# 下列 SESSION_ID 替换为 create 返回的整数 ID
-python3 skills/tuoyuanai/scripts/tuoyuanai.py send SESSION_ID --message-file ./brief.txt
-python3 skills/tuoyuanai/scripts/tuoyuanai.py query SESSION_ID --wait 180
-python3 skills/tuoyuanai/scripts/tuoyuanai.py results SESSION_ID
-python3 skills/tuoyuanai/scripts/tuoyuanai.py download SESSION_ID --output-dir ./output/deliverables
+python scripts/tuoyuanai.py capabilities
+python scripts/tuoyuanai.py create --message "写一段介绍城市夜景的短文，只要文字"
+python scripts/tuoyuanai.py query SESSION_ID --wait 180
+python scripts/tuoyuanai.py send SESSION_ID --message "把结尾改得简洁一些"
+python scripts/tuoyuanai.py results SESSION_ID
+python scripts/tuoyuanai.py download SESSION_ID --node-id NODE_ID --output-dir ./outputs
 ```
 
-Agent 的入口是 [SKILL.md](skills/tuoyuanai/SKILL.md)，命令帮助为
-`python3 skills/tuoyuanai/scripts/tuoyuanai.py --help`。
-[API 契约](skills/tuoyuanai/references/api.md) 说明流式返回、失败、并发保存、费用与下载边界。
+返回的 `sessionId` 用于后续查询与继续创作，`executionId` 标识本次执行，`project_url` 可直接打开网页。示例中的 ID 必须替换为实际回执。
 
-## 已知边界
+### 上传参考素材
 
-请先阅读 [v0.1 已知边界](KNOWN_LIMITATIONS.md)，尤其是登录令牌权限、已有画布的素材引用，以及音视频验收范围。
+```bash
+python scripts/tuoyuanai.py create
+python scripts/tuoyuanai.py upload SESSION_ID ./reference.png
+python scripts/tuoyuanai.py send SESSION_ID --message "根据参考图创作一张宣传图" --attachment-id ATTACHMENT_ID --allow-media
+```
 
-## 开源边界与贡献
+只有用户授权相应生成时才使用 `--allow-media`。图片授权不包含视频授权。
 
-仅发布 skill 文档、客户端脚本和协议说明，不包含生产数据库、部署配置、验收账号、
-服务端源码、提示词配置或供应商密钥。请勿把这些内容提交到 issue 或 pull request。
-安全问题请见 [SECURITY.md](SECURITY.md)，贡献约定见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+### 查询与停止
 
-MIT License。平台服务及其模型能力不因客户端开源而免费或获得额外授权。
+```bash
+python scripts/tuoyuanai.py query SESSION_ID --after-seq LAST_SEQ
+python scripts/tuoyuanai.py attachments SESSION_ID
+python scripts/tuoyuanai.py stop SESSION_ID
+```
+
+查询支持游标分页。等待超时不取消服务器任务；只有实际完成状态和结果才能作为完成依据。网络中断不要用新请求 ID 重复提交付费生成。同请求 ID、同正文会返回原受理身份，不会创建第二次执行。
+
+完整说明：[Skill](skills/tuoyuanai/SKILL.md) · [API](skills/tuoyuanai/references/api.md) · [边界](KNOWN_LIMITATIONS.md) · [安全](SECURITY.md)。
+
+## 开源范围
+
+本仓库采用 MIT 许可证，只包含 Skill、HTTP 客户端与文档，不包含平台私有服务端代码、服务商配置、密钥或验收账户。

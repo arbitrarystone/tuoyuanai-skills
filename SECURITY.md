@@ -1,13 +1,9 @@
-# Security
+# 安全
 
-Use a dedicated ordinary customer account. v0.1 authenticates with an account login token,
-not a separately scoped API key. Token files are access-restricted plaintext, not encrypted vaults.
-Do not store them in this repository or a shared/synchronized directory. The client does not store passwords.
+不要公开 Access Key、平台登录凭据、对象存储签名 URL、服务商密钥或客户素材。问题反馈应移除这些信息，只提供错误代码、脱敏回执和时间。
 
-Never share passwords, access tokens, provider API keys, request headers or signed media URLs
-in a public issue. Report a vulnerability through GitHub's private vulnerability reporting feature
-when available; otherwise use the customer-support channel within the platform without attaching secrets.
+客户端只从环境读取 Access Key，不保存凭据文件，不自动重试写请求，不跟随 HTTP 重定向。只有同源 OpenAPI 请求携带凭据，外部上传和下载不携带平台 Access Key。
 
-API requests refuse redirects. Upload/download requests to object storage do not receive the platform
-Authorization header. HTTPS is required except for loopback development deployments.
-The CLI performs no automatic request replay. On interrupted creation, inspect the saved session first.
+密钥应采用最小权限和适当有效期。不再使用时在个人中心撤销。撤销不取消已经受理的生成；需要停止时显式操作对应会话。
+
+发现安全问题请通过 GitHub 私密安全报告联系维护者，不要在公开 issue 附上密钥或客户数据。

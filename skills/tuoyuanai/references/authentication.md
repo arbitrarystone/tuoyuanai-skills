@@ -1,42 +1,15 @@
-# 登录与凭据
+# 认证
 
-首版复用拓元AI现有手机号/密码登录，**不是独立、长期有效、可单独撤销的 API Key**。
-登录令牌具有该账号的现有权限，受服务端有效期、账号状态与套餐限制。建议使用专用普通客户账号。
-401 时重新登录，不自动保存密码、续期或重试付费请求。
+本版仅使用独立 Access Key。用户在平台「个人中心 → Skill 接入」创建密钥，可以设置名称、1–365 天有效期和媒体生成权限。创建后完整密钥只显示一次；服务端仅保存摘要。每个用户最多 10 个有效密钥。
 
-需要 Python 3.10+。下列路径均从仓库根目录执行；安装后的 Agent 应使用 skill 的实际路径。
+在操作系统的安全环境配置中设置 `TUOYUANAI_ACCESS_KEY`。不要让 AI 打印变量值，也不要把密钥作为命令行参数、聊天内容、截图、版本控制文件或公开日志保存。
 
-## macOS / Linux
+`TUOYUANAI_BASE_URL` 是配套平台的地址；默认 `https://tuoyuanai.com`。HTTPS 为必需，本机 `localhost` / `127.0.0.1` / `::1` 的验收环境例外。地址不可包含用户名、密码、查询参数或路径。
 
-```bash
-python3 skills/tuoyuanai/scripts/tuoyuanai.py login \
-  --phone YOUR_PHONE \
-  --token-file "$HOME/.config/tuoyuanai/session.json"
-export TUOYUANAI_TOKEN_FILE="$HOME/.config/tuoyuanai/session.json"
-```
+客户端将请求发往 `/openapi/`，使用 `Authorization: Bearer <Access Key>`。不会登录普通账号，不读写旧版 token / session.json 文件，不自动回退网页接口。
 
-## Windows PowerShell
+密钥可在个人中心撤销。撤销或过期立即阻止新请求，不自动取消已经受理的任务。停止已有任务请在网页会话或另一个有效密钥下使用 `stop`。
 
-```powershell
-python skills/tuoyuanai/scripts/tuoyuanai.py login `
-  --phone YOUR_PHONE `
-  --token-file "$HOME/.config/tuoyuanai/session.json"
-$env:TUOYUANAI_TOKEN_FILE = "$HOME/.config/tuoyuanai/session.json"
-```
+媒体生成需要两重授权：密钥允许媒体，且本次命令使用 `--allow-media`。即使启用权限，也必须遵循用户具体要求，不得把图片需求扩展为视频或音频。
 
-密码通过终端隐藏输入，不作为命令行参数，也不打印到输出。令牌文件在 POSIX 下以 `0600`
-创建；Windows 下在写入令牌前使用 `icacls` 移除继承权限并只授权当前用户。
-文件以明文存储，并非操作系统密码保险箱；不要放入共享目录、仓库或同步盘。
-文件必须不存在，以防意外覆盖其他登录。重新登录请使用新文件并更新环境变量；旧文件由用户自行清理。
-
-自动化场景可以从受保护的进程环境注入 `TUOYUANAI_PASSWORD`，只用于 `login`。
-不要把赋值写入 shell 历史、配置文件或 CI 日志，使用后从进程环境移除。
-也可由自己的安全登录流程注入 `TUOYUANAI_ACCESS_TOKEN`；此时必须取消设置
-`TUOYUANAI_TOKEN_FILE`，两者不允许同时设置。
-
-默认访问 `https://tuoyuanai.com`。本地完整部署验收可设置
-`TUOYUANAI_BASE_URL=http://127.0.0.1:PORT`；只接受 HTTPS 或 loopback HTTP，
-不能包含 `/api/v1`。令牌文件绑定登录时的 origin，不能跨站点复用。
-
-平台令牌只发给所配置 origin 的 `/api/v1` 接口；对象存储直传和结果下载不携带令牌。
-客户端拒绝 HTTP 重定向。不要把 API 错误、原始请求头或带签名的素材 URL 发布到 issue。
+旧版 v0.1.x 的普通登录令牌不能用于新版接口。升级时创建 Access Key；无需迁移或删除原有网页会话。新版 Skill 只访问通过 OpenAPI 创建的本人会话。
