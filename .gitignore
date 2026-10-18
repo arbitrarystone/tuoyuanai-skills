@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+**/__pycache__/
+*.pyc
+.venv/
+output/
+.playwright*/
+node_modules/
+*token*.json
+*session*.json
+*.pem
+*.key
+.DS_Store
+Thumbs.db
